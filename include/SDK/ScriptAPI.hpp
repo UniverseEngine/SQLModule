@@ -1,7 +1,5 @@
 #pragma once
 
-#include <SDK/Universe/UniverseTypes.hpp>
-
 namespace Universe::Scripting
 {
     namespace API

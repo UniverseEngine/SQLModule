@@ -4,7 +4,7 @@
 
 namespace module
 {
-    DLLEXPORT void OnLoad(String* name, String* description, String* author, ModuleAPI* api)
+    DLLEXPORT void OnLoad(String* name, String* description, String* author, ModuleAPI::IModuleAPI* api)
     {
         *name        = "SQL Module";
         *description = "";

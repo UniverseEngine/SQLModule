@@ -9,6 +9,9 @@ namespace Universe::ModuleAPI
         virtual uint8_t  GetPlayerCount()              = 0;
         virtual uint8_t  GetMaxPlayers()               = 0;
         virtual uint8_t  GetGame()                     = 0;
+        virtual bool     IsPassworded()                = 0;
+        virtual String   GetGamemode()                 = 0;
+        virtual String   GetVersion()                  = 0;
         virtual String   GetClientName(uint32_t index) = 0;
     };
 

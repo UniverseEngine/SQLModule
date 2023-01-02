@@ -44,7 +44,7 @@ namespace Universe::Scripting
             virtual void Set(String k, bool v)   = 0;
             virtual void Set(String k, String v) = 0;
 
-            virtual void SetFunction(String k, String params, int nargs, FunctionCallback callback) = 0;
+            virtual void SetFunction(String k, FunctionCallback callback) = 0;
         };
 
         class IReturnValue {
@@ -87,7 +87,7 @@ namespace Universe::Scripting
             virtual IObject& ObjectValue(String name, void* ptr) = 0;
 
             /* funcs */
-            virtual void RegisterGlobalFunction(String name, String args, int8_t nargs, FunctionCallback callback) = 0;
+            virtual void RegisterGlobalFunction(String name, FunctionCallback callback) = 0;
         };
     }
 }

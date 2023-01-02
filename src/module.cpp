@@ -37,7 +37,7 @@ namespace module
         vm->Global().Set("SQLITE_OPEN_NOFOLLOW", SQLITE_OPEN_NOFOLLOW);
         vm->Global().Set("SQLITE_OPEN_EXRESCODE", SQLITE_OPEN_EXRESCODE);
 
-        vm->RegisterGlobalFunction("sqlite3_open", "si", 3, [](Scripting::API::ICallbackInfo& info) {
+        vm->RegisterGlobalFunction("sqlite3_open", [](Scripting::API::ICallbackInfo& info) {
             String filename  = info[0].ToString();
             int flags        = info[1].ToNumber();
             String zVfs      = "";
@@ -49,7 +49,7 @@ namespace module
 
             auto& sqldatabase = info.GetVM()->ObjectValue("SqlDatabase", db);
             {
-                sqldatabase.SetFunction("exec", "s", 1, [](Scripting::API::ICallbackInfo& info) {
+                sqldatabase.SetFunction("exec", [](Scripting::API::ICallbackInfo& info) {
                     char* errmsg = 0;
                     sqlite3_exec((sqlite3*)info.This().GetInternal(), info[0].ToString().c_str(), 0, 0, &errmsg);
 
@@ -57,7 +57,7 @@ namespace module
                         info.GetVM()->ThrowException("[sqlmodule] Error executing: " + String(errmsg));
                 });
 
-                sqldatabase.SetFunction("query", "s", 1, [](Scripting::API::ICallbackInfo& info) {
+                sqldatabase.SetFunction("query", [](Scripting::API::ICallbackInfo& info) {
                     sqlite3* db = (sqlite3*)info.This().GetInternal();
 
                     sqlite3_stmt* stmt;
@@ -81,7 +81,7 @@ namespace module
                     sqlite3_finalize(stmt);
                 });
 
-                sqldatabase.SetFunction("close", "", 0, [](Scripting::API::ICallbackInfo& info) {
+                sqldatabase.SetFunction("close", [](Scripting::API::ICallbackInfo& info) {
                     sqlite3_close_v2((sqlite3*)info.This().GetInternal());
                 });
             }
@@ -89,15 +89,15 @@ namespace module
             info.GetReturnValue().Set(sqldatabase);
         });
 
-        vm->RegisterGlobalFunction("sqlite3_reset", "e", 1, [](Scripting::API::ICallbackInfo& info) {
+        vm->RegisterGlobalFunction("sqlite3_reset", [](Scripting::API::ICallbackInfo& info) {
             sqlite3_reset((sqlite3_stmt*)info[0].ToExternal());
         });
 
-        vm->RegisterGlobalFunction("sqlite3_column_count", "e", 1, [](Scripting::API::ICallbackInfo& info) {
+        vm->RegisterGlobalFunction("sqlite3_column_count", [](Scripting::API::ICallbackInfo& info) {
             info.GetReturnValue().Set(sqlite3_column_count((sqlite3_stmt*)info[0].ToExternal()));
         });
 
-        vm->RegisterGlobalFunction("sqlite3_column_data", "en", 2, [](Scripting::API::ICallbackInfo& info) {
+        vm->RegisterGlobalFunction("sqlite3_column_data", [](Scripting::API::ICallbackInfo& info) {
             auto stmt   = (sqlite3_stmt*)info[0].ToExternal();
             int  column = info[1].ToNumber();
             switch (sqlite3_column_type(stmt, column))
@@ -119,7 +119,7 @@ namespace module
             }
         });
 
-        vm->RegisterGlobalFunction("sqlite3_column_name", "en", 2, [](Scripting::API::ICallbackInfo& info) {
+        vm->RegisterGlobalFunction("sqlite3_column_name", [](Scripting::API::ICallbackInfo& info) {
             auto stmt   = (sqlite3_stmt*)info[0].ToExternal();
             int  column = info[1].ToNumber();
             if (column > sqlite3_column_count(stmt))
@@ -135,7 +135,7 @@ namespace module
             info.GetReturnValue().Set(String(sqlite3_column_name(stmt, column)));
         });
 
-        vm->RegisterGlobalFunction("sqlite3_column_decltype", "en", 2, [](Scripting::API::ICallbackInfo& info) {
+        vm->RegisterGlobalFunction("sqlite3_column_decltype", [](Scripting::API::ICallbackInfo& info) {
             auto stmt   = (sqlite3_stmt*)info[0].ToExternal();
             int  column = info[1].ToNumber();
             if (column > sqlite3_column_count(stmt))
@@ -151,11 +151,11 @@ namespace module
             info.GetReturnValue().Set(String(sqlite3_column_decltype(stmt, column)));
         });
 
-        vm->RegisterGlobalFunction("sqlite3_finalize", "e", 1, [](Scripting::API::ICallbackInfo& info) {
+        vm->RegisterGlobalFunction("sqlite3_finalize", [](Scripting::API::ICallbackInfo& info) {
             sqlite3_finalize((sqlite3_stmt*)info[0].ToExternal());
         });
 
-        vm->RegisterGlobalFunction("sqlite3_escape", "s", 1, [](Scripting::API::ICallbackInfo& info) {
+        vm->RegisterGlobalFunction("sqlite3_escape", [](Scripting::API::ICallbackInfo& info) {
             String str = sqlite3_mprintf("%q", info[0].ToString().c_str());
             info.GetReturnValue().Set(str);
         });

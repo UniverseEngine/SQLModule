@@ -32,29 +32,29 @@ namespace Universe::Scripting
         public:
             virtual void* GetInternal() = 0;
 
-            virtual IValue& Get(String k) = 0;
+            virtual IValue& Get(const String& k) = 0;
 
-            virtual void Set(int k, double v) = 0;
-            virtual void Set(int k, int v)    = 0;
-            virtual void Set(int k, bool v)   = 0;
-            virtual void Set(int k, String v) = 0;
+            virtual void Set(int k, double v)        = 0;
+            virtual void Set(int k, int v)           = 0;
+            virtual void Set(int k, bool v)          = 0;
+            virtual void Set(int k, const String& v) = 0;
 
-            virtual void Set(String k, double v) = 0;
-            virtual void Set(String k, int v)    = 0;
-            virtual void Set(String k, bool v)   = 0;
-            virtual void Set(String k, String v) = 0;
+            virtual void Set(const String& k, double v)        = 0;
+            virtual void Set(const String& k, int v)           = 0;
+            virtual void Set(const String& k, bool v)          = 0;
+            virtual void Set(const String& k, const String& v) = 0;
 
-            virtual void SetFunction(String k, FunctionCallback callback) = 0;
+            virtual void SetFunction(const String& k, FunctionCallback callback) = 0;
         };
 
         class IReturnValue {
         public:
-            virtual void Set(String text) = 0;
-            virtual void Set(double v)    = 0;
-            virtual void Set(int v)       = 0;
-            virtual void Set(bool v)      = 0;
-            virtual void Set(void* v)     = 0;
-            virtual void Set(IObject& o)  = 0;
+            virtual void Set(const String& text) = 0;
+            virtual void Set(double v)           = 0;
+            virtual void Set(int v)              = 0;
+            virtual void Set(bool v)             = 0;
+            virtual void Set(void* v)            = 0;
+            virtual void Set(IObject& o)         = 0;
 
             virtual void SetNull() = 0;
         };
@@ -71,23 +71,23 @@ namespace Universe::Scripting
 
         class IGlobal {
         public:
-            virtual void Set(String k, double v) = 0;
-            virtual void Set(String k, int v)    = 0;
-            virtual void Set(String k, bool v)   = 0;
-            virtual void Set(String k, String v) = 0;
+            virtual void Set(const String& k, double v)        = 0;
+            virtual void Set(const String& k, int v)           = 0;
+            virtual void Set(const String& k, bool v)          = 0;
+            virtual void Set(const String& k, const String& v) = 0;
         };
 
         class IVM {
         public:
             virtual IGlobal& Global() = 0;
 
-            virtual void ThrowException(String text) = 0;
+            virtual void ThrowException(const String& text) = 0;
 
             /* objects */
-            virtual IObject& ObjectValue(String name, void* ptr) = 0;
+            virtual IObject& ObjectValue(const String& name, void* ptr) = 0;
 
             /* funcs */
-            virtual void RegisterGlobalFunction(String name, FunctionCallback callback) = 0;
+            virtual void RegisterGlobalFunction(const String& name, FunctionCallback callback) = 0;
         };
     }
 }

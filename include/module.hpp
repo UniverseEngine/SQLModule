@@ -1,8 +1,6 @@
 #pragma once
 
-#include "pch.hpp"
-
-#include <SDK/SDK.hpp>
+#include "SDK/SDK.hpp"
 
 using namespace Universe;
 

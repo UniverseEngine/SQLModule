@@ -38,16 +38,16 @@ namespace module
         vm->Global().Set("SQLITE_OPEN_EXRESCODE", SQLITE_OPEN_EXRESCODE);
 
         vm->RegisterGlobalFunction("sqlite3_open", [](Scripting::API::ICallbackInfo& info) {
-            String filename  = info[0].ToString();
-            int flags        = info[1].ToNumber();
-            String zVfs      = "";
+            String filename = info[0].ToString();
+            int    flags    = info[1].ToNumber();
+            String zVfs     = "";
             if (info.Length() - 1 > 1)
                 zVfs = info[2].ToString();
 
             sqlite3* db;
             sqlite3_open_v2(filename.c_str(), &db, flags, zVfs.empty() ? 0 : zVfs.c_str());
 
-            auto& sqldatabase = info.GetVM()->ObjectValue("SqlDatabase", db);
+            auto& sqldatabase = info.ObjectValue("SqlDatabase", db);
             {
                 sqldatabase.SetFunction("exec", [](Scripting::API::ICallbackInfo& info) {
                     char* errmsg = 0;
@@ -164,4 +164,4 @@ namespace module
     DLLEXPORT void OnPulse()
     {
     }
-}
+} // namespace module

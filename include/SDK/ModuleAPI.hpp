@@ -17,6 +17,8 @@ namespace Universe::ModuleAPI
 
     class IModuleAPI {
     public:
+        virtual const std::unordered_map<std::string, std::string>& GetConfig() const = 0;
+
         virtual IServerAPI* GetServerAPI() = 0;
     };
-}
+} // namespace Universe::ModuleAPI

@@ -57,6 +57,59 @@ namespace module
                         info.GetVM()->ThrowException("[sqlmodule] Error executing: " + String(errmsg));
                 });
 
+                sqldatabase.SetFunction("queryOne", [](Scripting::API::ICallbackInfo& info) {
+                    sqlite3* db = (sqlite3*)info.This().GetInternal();
+
+                    sqlite3_stmt* stmt;
+
+                    int ret = sqlite3_prepare_v3(db, info[0].ToString().c_str(), -1, 0, &stmt, 0);
+                    if (ret != SQLITE_OK)
+                    {
+                        info.GetVM()->ThrowException("[sqlmodule] Error in query: " + String(sqlite3_errmsg(db)));
+                        sqlite3_finalize(stmt);
+                        return;
+                    }
+
+                    auto& objStmt = info.ObjectValue("sqlStmt", nullptr);
+
+                    ret = sqlite3_step(stmt);
+
+                    for (int col = 0; col < sqlite3_column_count(stmt); col++)
+                    {
+                        std::string colname { sqlite3_column_name(stmt, col) };
+
+                        int coltype = sqlite3_column_type(stmt, col);
+                        switch (sqlite3_column_type(stmt, col))
+                        {
+                        case SQLITE_INTEGER:
+                            objStmt.Set(colname, sqlite3_column_int(stmt, col));
+                            break;
+                        case SQLITE_FLOAT:
+                            objStmt.Set(colname, sqlite3_column_double(stmt, col));
+                            break;
+                        case SQLITE_BLOB:
+                            // not supported, set it to null
+                            objStmt.SetNull(colname);
+                            break;
+                        case SQLITE3_TEXT:
+                            objStmt.Set(colname, sqlite3_column_text(stmt, col));
+                            break;
+                        case SQLITE_NULL:
+                            objStmt.SetNull(colname);
+                            break;
+                        default:
+                            break;
+                        }
+                    }
+
+                    if (ret == SQLITE_ROW)
+                        info.GetReturnValue().Set(objStmt);
+                    else
+                        info.GetReturnValue().SetNull();
+
+                    sqlite3_finalize(stmt);
+                });
+
                 sqldatabase.SetFunction("query", [](Scripting::API::ICallbackInfo& info) {
                     sqlite3* db = (sqlite3*)info.This().GetInternal();
 
@@ -70,15 +123,49 @@ namespace module
                         return;
                     }
 
-                    if ((ret = sqlite3_step(stmt)) == SQLITE_ROW)
+                    auto& objStmt = info.ObjectValue("sqlStmt", nullptr);
+
+                    int count {};
+                    while (sqlite3_step(stmt))
                     {
-                        info.GetReturnValue().Set((void*)stmt);
-                        return;
+                        auto& objStmt2 = info.ObjectValue("sqlStmt", nullptr);
+
+                        for (int col = 0; col < sqlite3_column_count(stmt); col++)
+                        {
+                            std::string colname { sqlite3_column_name(stmt, col) };
+
+                            int coltype = sqlite3_column_type(stmt, col);
+                            switch (sqlite3_column_type(stmt, col))
+                            {
+                            case SQLITE_INTEGER:
+                                objStmt2.Set(colname, sqlite3_column_int(stmt, col));
+                                break;
+                            case SQLITE_FLOAT:
+                                objStmt2.Set(colname, sqlite3_column_double(stmt, col));
+                                break;
+                            case SQLITE_BLOB:
+                                // not supported, set it to null
+                                objStmt2.SetNull(colname);
+                                break;
+                            case SQLITE3_TEXT:
+                                objStmt2.Set(colname, sqlite3_column_text(stmt, col));
+                                break;
+                            case SQLITE_NULL:
+                                objStmt2.SetNull(colname);
+                                break;
+                            default:
+                                break;
+                            }
+                        }
+
+                        objStmt.Set(count, objStmt2);
+
+                        count++;
                     }
 
-                    info.GetVM()->ThrowException("[sqlmodule] Error in query: " + String(sqlite3_errmsg(db)));
-
                     sqlite3_finalize(stmt);
+
+                    info.GetReturnValue().Set(objStmt);
                 });
 
                 sqldatabase.SetFunction("close", [](Scripting::API::ICallbackInfo& info) {
@@ -87,72 +174,6 @@ namespace module
             }
 
             info.GetReturnValue().Set(sqldatabase);
-        });
-
-        vm->RegisterGlobalFunction("sqlite3_reset", [](Scripting::API::ICallbackInfo& info) {
-            sqlite3_reset((sqlite3_stmt*)info[0].ToExternal());
-        });
-
-        vm->RegisterGlobalFunction("sqlite3_column_count", [](Scripting::API::ICallbackInfo& info) {
-            info.GetReturnValue().Set(sqlite3_column_count((sqlite3_stmt*)info[0].ToExternal()));
-        });
-
-        vm->RegisterGlobalFunction("sqlite3_column_data", [](Scripting::API::ICallbackInfo& info) {
-            auto stmt   = (sqlite3_stmt*)info[0].ToExternal();
-            int  column = info[1].ToNumber();
-            switch (sqlite3_column_type(stmt, column))
-            {
-            case SQLITE_INTEGER:
-                info.GetReturnValue().Set(sqlite3_column_int(stmt, column));
-                break;
-            case SQLITE_FLOAT:
-                info.GetReturnValue().Set(sqlite3_column_double(stmt, column));
-                break;
-            case SQLITE_TEXT:
-                info.GetReturnValue().Set(String((const char*)sqlite3_column_text(stmt, column)));
-                break;
-            case SQLITE_BLOB:
-                info.GetVM()->ThrowException("[sqlmodule] no blob support");
-            default:
-                info.GetReturnValue().SetNull();
-                break;
-            }
-        });
-
-        vm->RegisterGlobalFunction("sqlite3_column_name", [](Scripting::API::ICallbackInfo& info) {
-            auto stmt   = (sqlite3_stmt*)info[0].ToExternal();
-            int  column = info[1].ToNumber();
-            if (column > sqlite3_column_count(stmt))
-            {
-                info.GetVM()->ThrowException("column number exceeded column count");
-                return;
-            }
-            if (column < 0)
-            {
-                info.GetVM()->ThrowException("column number can't be negative");
-                return;
-            }
-            info.GetReturnValue().Set(String(sqlite3_column_name(stmt, column)));
-        });
-
-        vm->RegisterGlobalFunction("sqlite3_column_decltype", [](Scripting::API::ICallbackInfo& info) {
-            auto stmt   = (sqlite3_stmt*)info[0].ToExternal();
-            int  column = info[1].ToNumber();
-            if (column > sqlite3_column_count(stmt))
-            {
-                info.GetVM()->ThrowException("column number exceeded column count");
-                return;
-            }
-            if (column < 0)
-            {
-                info.GetVM()->ThrowException("column number can't be negative");
-                return;
-            }
-            info.GetReturnValue().Set(String(sqlite3_column_decltype(stmt, column)));
-        });
-
-        vm->RegisterGlobalFunction("sqlite3_finalize", [](Scripting::API::ICallbackInfo& info) {
-            sqlite3_finalize((sqlite3_stmt*)info[0].ToExternal());
         });
 
         vm->RegisterGlobalFunction("sqlite3_escape", [](Scripting::API::ICallbackInfo& info) {

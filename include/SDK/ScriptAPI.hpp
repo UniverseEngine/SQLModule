@@ -49,14 +49,18 @@ namespace Universe::Scripting::API
         virtual void Set(int k, int v)           = 0;
         virtual void Set(int k, bool v)          = 0;
         virtual void Set(int k, const String& v) = 0;
+        virtual void Set(int k, IObject& v)      = 0;
+        virtual void SetNull(int k)              = 0;
 
         virtual void Set(const String& k, double v)        = 0;
         virtual void Set(const String& k, int v)           = 0;
         virtual void Set(const String& k, bool v)          = 0;
         virtual void Set(const String& k, const String& v) = 0;
+        virtual void Set(const String& k, IObject& v)      = 0;
+        virtual void SetNull(const String& k)              = 0;
 
-        virtual void SetFunction(const String& k, FunctionCallback callback)                                                                         = 0;
-        virtual void SetAccessor(const String& k, AccessorGetterCallback getterCallback, AccessorSetterCallback setterCallback, ValueType valueType) = 0;
+        virtual void SetFunction(const String& k, FunctionCallback callback)                                                                    = 0;
+        virtual void SetAccessor(const String& k, AccessorGetterCallback getterCallback, AccessorSetterCallback setterCallback, char valueType) = 0;
     };
 
     class IReturnValue {

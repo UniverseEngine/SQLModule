@@ -123,12 +123,12 @@ namespace module
                         return;
                     }
 
-                    auto& objStmt = info.ObjectValue("sqlStmt", nullptr);
+                    auto& objStmt = info.ObjectValue("SQLite Statement", nullptr);
 
                     int count {};
-                    while (sqlite3_step(stmt))
+                    while (sqlite3_step(stmt) == SQLITE_ROW)
                     {
-                        auto& objStmt2 = info.ObjectValue("sqlStmt", nullptr);
+                        auto& objStmt2 = info.ObjectValue("SQLite Statement", nullptr);
 
                         for (int col = 0; col < sqlite3_column_count(stmt); col++)
                         {
@@ -148,7 +148,7 @@ namespace module
                                 objStmt2.SetNull(colname);
                                 break;
                             case SQLITE3_TEXT:
-                                objStmt2.Set(colname, sqlite3_column_text(stmt, col));
+                                objStmt2.Set(colname, std::string { reinterpret_cast<const char*>(sqlite3_column_text(stmt, col)) });
                                 break;
                             case SQLITE_NULL:
                                 objStmt2.SetNull(colname);

@@ -1,16 +1,35 @@
 #pragma once
 
-#include "pch.hpp"
+#include <ModuleAPI/ModuleAPI.hpp>
 
-#include <SDK/SDK.hpp>
+#include <SDK/ScriptAPI.hpp>
 
-using namespace Universe;
+#include <memory>
 
-namespace module
+#pragma once
+
+#ifdef _WIN32
+#define DLLEXPORT __declspec(dllexport)
+#else
+#define DLLEXPORT __attribute__((visibility("default")))
+#endif
+
+using namespace Universe::ModuleAPI;
+
+namespace AnnounceModule
 {
-    ModuleAPI::IModuleAPI* m_api;
+    class ModuleHandler : public IModuleHandler {
+    public:
+        void OnModuleLoad(ModuleDetails& details, IModuleInterface* moduleInterface) override;
+        void OnModuleTick() override;
+    };
+    static std::unique_ptr<ModuleHandler> m_moduleHandler = std::make_unique<ModuleHandler>();
 
-    DLLEXPORT void OnLoad(String* name, String* description, String* author, ModuleAPI::IModuleAPI* api);
-    DLLEXPORT void RegisterFunctions(Scripting::API::IVM* vm);
-    DLLEXPORT void OnPulse();
+} // namespace AnnounceModule
+
+void RegisterFunctions(Universe::Scripting::API::IVM* vm);
+
+extern "C" DLLEXPORT IModuleHandler* CreateModuleHandler()
+{
+    return AnnounceModule::m_moduleHandler.get();
 }

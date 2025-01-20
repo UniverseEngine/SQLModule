@@ -9,4 +9,6 @@ target_include_directories(SQLModule PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set_target_properties(SQLModule PROPERTIES PREFIX "")
 
+target_link_libraries(SQLModule ModuleAPI) # TODO: Extract sqlite3
+
 install(TARGETS SQLModule RUNTIME DESTINATION "Server/modules" COMPONENT LCMPServer)

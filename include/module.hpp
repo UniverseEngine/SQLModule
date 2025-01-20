@@ -28,8 +28,3 @@ namespace AnnounceModule
 } // namespace AnnounceModule
 
 void RegisterFunctions(Universe::Scripting::API::IVM* vm);
-
-extern "C" DLLEXPORT IModuleHandler* CreateModuleHandler()
-{
-    return AnnounceModule::m_moduleHandler.get();
-}

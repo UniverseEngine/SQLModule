@@ -190,3 +190,8 @@ void RegisterFunctions(Universe::Scripting::API::IVM* vm)
         info.GetReturnValue().Set(str);
     });
 }
+
+extern "C" DLLEXPORT IModuleHandler* CreateModuleHandler()
+{
+    return AnnounceModule::m_moduleHandler.get();
+}

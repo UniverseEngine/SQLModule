@@ -1,16 +1,37 @@
 #pragma once
 
-#include "pch.hpp"
+#include <ModuleAPI/ModuleAPI.hpp>
 
-#include <SDK/SDK.hpp>
+#include <SDK/ScriptAPI.hpp>
 
-using namespace Universe;
+#include <memory>
 
-namespace module
+#pragma once
+
+using namespace Universe::ModuleAPI;
+
+namespace AnnounceModule
 {
-    ModuleAPI::IModuleAPI* m_api;
+    class ModuleHandler : public IModuleHandler {
+    public:
+        void OnModuleLoad(ModuleDetails&, IModuleInterface&) override;
+        void OnModuleTick() override {};
+    };
+    static std::unique_ptr<ModuleHandler> m_moduleHandler = std::make_unique<ModuleHandler>();
 
-    DLLEXPORT void OnLoad(String* name, String* description, String* author, ModuleAPI::IModuleAPI* api);
-    DLLEXPORT void RegisterFunctions(Scripting::API::IVM* vm);
-    DLLEXPORT void OnPulse();
-}
+    class ScriptingHandler /* : public IScriptingHandler */ {
+    public:
+        void OnRegister(Universe::Scripting::API::IVM*); // OnRegister(Universe::ScriptingAPI::VM) override;
+
+    private: // Your functions here
+        // clang-format off
+        static void open    (Universe::Scripting::API::ICallbackInfo&); // (Universe::ScriptingAPI::CallbackInfo&);
+        static void exec    (Universe::Scripting::API::ICallbackInfo&); // (Universe::ScriptingAPI::CallbackInfo&);
+        static void queryOne(Universe::Scripting::API::ICallbackInfo&); // (Universe::ScriptingAPI::CallbackInfo&);
+        static void query   (Universe::Scripting::API::ICallbackInfo&); // (Universe::ScriptingAPI::CallbackInfo&);
+        static void close   (Universe::Scripting::API::ICallbackInfo&); // (Universe::ScriptingAPI::CallbackInfo&);
+        static void escape  (Universe::Scripting::API::ICallbackInfo&); // (Universe::ScriptingAPI::CallbackInfo&);
+        // clang-format on
+    };
+
+} // namespace AnnounceModule

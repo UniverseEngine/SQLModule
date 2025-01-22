@@ -1,6 +1,5 @@
 set(SOURCES
     "src/sqlite/sqlite3.c"
-    "src/pch.cpp"
     "src/module.cpp"
 )
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ModuleAPI/ModuleAPI.hpp>
+#include <ServerModuleAPI.hpp>
 
 #include <SDK/ScriptAPI.hpp>
 
@@ -14,17 +14,24 @@
 #define DLLEXPORT __attribute__((visibility("default")))
 #endif
 
-using namespace Universe::ModuleAPI;
-
-namespace AnnounceModule
+namespace SQLModule
 {
-    class ModuleHandler : public IModuleHandler {
+    using namespace Universe;
+
+    // Module API implementation for SQLModule
+    class ModuleHandler : public IServerModuleHandler {
     public:
-        void OnModuleLoad(ModuleDetails& details, IModuleInterface* moduleInterface) override;
-        void OnModuleTick() override;
+        void OnModuleLoad(ServerModuleDetails& details, IServerModuleInterface* moduleInterface) override;
+        void OnModuleTick() override {};
     };
-    static std::unique_ptr<ModuleHandler> m_moduleHandler = std::make_unique<ModuleHandler>();
+    static std::unique_ptr<ModuleHandler> gModuleHandler = std::make_unique<ModuleHandler>();
+} // namespace SQLModule
 
-} // namespace AnnounceModule
+// Scripting API entry point (Pending refactoring)
+extern "C" DLLEXPORT void RegisterFunctions(Universe::Scripting::API::IVM* vm);
 
-void RegisterFunctions(Universe::Scripting::API::IVM* vm);
+// Module API entry point
+extern "C" DLLEXPORT Universe::IServerModuleHandler* GetServerModuleHandler()
+{
+    return SQLModule::gModuleHandler.get();
+}

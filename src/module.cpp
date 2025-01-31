@@ -2,27 +2,30 @@
 
 #include <sqlite/sqlite3.h>
 
+using namespace Universe;
+
+// Module API
+static IServerModuleInterface* gModuleInterface;
+
+// Module details
 const static std::string NAME    = "SQLite Module";
 const static std::string DESC    = "Provides SQLite functionality";
 const static std::string VERSION = "1.0.0-rc.1";
 const static std::string AUTHOR  = "lucx, perikiyoxd";
 
-static IModuleInterface* m_moduleInterface;
-
-void AnnounceModule::ModuleHandler::OnModuleLoad(ModuleDetails& details, IModuleInterface* moduleInterface)
+void SQLModule::ModuleHandler::OnModuleLoad(ServerModuleDetails& details, IServerModuleInterface* moduleInterface)
 {
     details.moduleName        = NAME;
     details.moduleDescription = DESC;
     details.moduleAuthor      = VERSION;
     details.moduleVersion     = AUTHOR;
 
-    m_moduleInterface = moduleInterface;
+    gModuleInterface = moduleInterface;
 }
 
-void AnnounceModule::ModuleHandler::OnModuleTick() {}
-
-void RegisterFunctions(Universe::Scripting::API::IVM* vm)
+extern "C" DLLEXPORT void RegisterFunctions(Scripting::API::IVM* vm)
 {
+
     auto& globalCtx = vm->Global();
 
     globalCtx.Set("SQLITE_OPEN_READWRITE", SQLITE_OPEN_READWRITE);
@@ -47,7 +50,7 @@ void RegisterFunctions(Universe::Scripting::API::IVM* vm)
     globalCtx.Set("SQLITE_OPEN_NOFOLLOW", SQLITE_OPEN_NOFOLLOW);
     globalCtx.Set("SQLITE_OPEN_EXRESCODE", SQLITE_OPEN_EXRESCODE);
 
-    vm->RegisterGlobalFunction("sqlite3_open", [](Universe::Scripting::API::ICallbackInfo& info) {
+    vm->RegisterGlobalFunction("sqlite3_open", [](Scripting::API::ICallbackInfo& info) {
         std::string filename = info[0].ToString();
         int         flags    = info[1].ToNumber();
         std::string zVfs     = "";
@@ -59,7 +62,7 @@ void RegisterFunctions(Universe::Scripting::API::IVM* vm)
 
         auto& sqldatabase = info.ObjectValue("SqlDatabase", db);
         {
-            sqldatabase.SetFunction("exec", [](Universe::Scripting::API::ICallbackInfo& info) {
+            sqldatabase.SetFunction("exec", [](Scripting::API::ICallbackInfo& info) {
                 char* errmsg = 0;
                 sqlite3_exec(static_cast<sqlite3*>(info.This().GetInternal()), info[0].ToString().c_str(), 0, 0, &errmsg);
 
@@ -67,7 +70,7 @@ void RegisterFunctions(Universe::Scripting::API::IVM* vm)
                     info.GetVM()->ThrowException("[sqlmodule] Error executing: " + std::string(errmsg));
             });
 
-            sqldatabase.SetFunction("queryOne", [](Universe::Scripting::API::ICallbackInfo& info) {
+            sqldatabase.SetFunction("queryOne", [](Scripting::API::ICallbackInfo& info) {
                 sqlite3* db = static_cast<sqlite3*>(info.This().GetInternal());
 
                 sqlite3_stmt* stmt;
@@ -120,7 +123,7 @@ void RegisterFunctions(Universe::Scripting::API::IVM* vm)
                 sqlite3_finalize(stmt);
             });
 
-            sqldatabase.SetFunction("query", [](Universe::Scripting::API::ICallbackInfo& info) {
+            sqldatabase.SetFunction("query", [](Scripting::API::ICallbackInfo& info) {
                 sqlite3* db = static_cast<sqlite3*>(info.This().GetInternal());
 
                 sqlite3_stmt* stmt;
@@ -177,7 +180,7 @@ void RegisterFunctions(Universe::Scripting::API::IVM* vm)
                 info.GetReturnValue().Set(objStmt);
             });
 
-            sqldatabase.SetFunction("close", [](Universe::Scripting::API::ICallbackInfo& info) {
+            sqldatabase.SetFunction("close", [](Scripting::API::ICallbackInfo& info) {
                 sqlite3_close_v2(static_cast<sqlite3*>(info.This().GetInternal()));
             });
         }
@@ -185,13 +188,8 @@ void RegisterFunctions(Universe::Scripting::API::IVM* vm)
         info.GetReturnValue().Set(sqldatabase);
     });
 
-    vm->RegisterGlobalFunction("sqlite3_escape", [](Universe::Scripting::API::ICallbackInfo& info) {
+    vm->RegisterGlobalFunction("sqlite3_escape", [](Scripting::API::ICallbackInfo& info) {
         std::string str = sqlite3_mprintf("%q", info[0].ToString().c_str());
         info.GetReturnValue().Set(str);
     });
-}
-
-extern "C" DLLEXPORT IModuleHandler* CreateModuleHandler()
-{
-    return AnnounceModule::m_moduleHandler.get();
 }
